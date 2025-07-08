@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | NoteVault</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>NoteVault</h1>
+
+    <form id="auth-form">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      
+      <button type="submit">Login</button>
+      <p id="switch-mode">Don't have an account? <a href="#" onclick="toggleMode()">Sign up</a></p>
+    </form>
+
+    <p id="message"></p>
+  </div>
+
+  <script>
+    let mode = 'login';
+
+    const form = document.getElementById('auth-form');
+    const message = document.getElementById('message');
+
+    function toggleMode() {
+      mode = mode === 'login' ? 'signup' : 'login';
+      document.querySelector('button').textContent = mode === 'login' ? 'Login' : 'Sign up';
+      document.getElementById('switch-mode').innerHTML = 
+        mode === 'login' 
+          ? `Don't have an account? <a href="#" onclick="toggleMode()">Sign up</a>` 
+          : `Already have an account? <a href="#" onclick="toggleMode()">Login</a>`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const res = await fetch(`http://localhost:3000/${mode}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (data.userId) {
+        localStorage.setItem('userId', data.userId);
+        window.location.href = 'index.html';
+      } else {
+        message.textContent = data.error || 'Something went wrong';
+      }
+    });
+  </script>
+</body>
+</html>

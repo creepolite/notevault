@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | NoteVault</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Your Notes</h1>
+    
+    <form id="note-form">
+      <input type="text" id="title" placeholder="Note title" required />
+      <textarea id="content" placeholder="Your note..." required></textarea>
+      <button type="submit">Add Note</button>
+    </form>
+
+    <div id="notes-list"></div>
+    <button id="logout">Logout</button>
+  </div>
+
+  <script>
+    const userId = localStorage.getItem('userId');
+    if (!userId) window.location.href = 'login.html';
+
+    const form = document.getElementById('note-form');
+    const notesList = document.getElementById('notes-list');
+
+    function loadNotes() {
+      fetch(`http://localhost:3000/notes/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          notesList.innerHTML = '';
+          data.forEach(note => {
+            const div = document.createElement('div');
+            div.className = 'note';
+            div.innerHTML = `
+              <h3>${note.title}</h3>
+              <p>${note.content}</p>
+              <button onclick="deleteNote(${note.id})">Delete</button>
+            `;
+            notesList.appendChild(div);
+          });
+        });
+    }
+
+    function deleteNote(id) {
+      fetch(`http://localhost:3000/notes/${id}`, { method: 'DELETE' })
+        .then(() => loadNotes());
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+
+      fetch('http://localhost:3000/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, title, content })
+      }).then(() => {
+        form.reset();
+        loadNotes();
+      });
+    });
+
+    document.getElementById('logout').addEventListener('click', () => {
+      localStorage.removeItem('userId');
+      window.location.href = 'login.html';
+    });
+
+    loadNotes();
+  </script>
+</body>
+</html>
